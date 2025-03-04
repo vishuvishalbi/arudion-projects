@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <U8g2lib.h>
-
+#include <Buzzer.h>
 // Display setup
 U8G2_SSD1306_128X64_NONAME_1_SW_I2C u8g2(U8G2_R0, /* clock=*/ SCL, /* data=*/ SDA, /* reset=*/ U8X8_PIN_NONE);
 
@@ -12,7 +12,7 @@ U8G2_SSD1306_128X64_NONAME_1_SW_I2C u8g2(U8G2_R0, /* clock=*/ SCL, /* data=*/ SD
 // Timer constants
 #define WORK_TIME 25 * 60    // 25 minutes in seconds
 #define BREAK_TIME 5 * 60    // 5 minutes in seconds
-
+Buzzer buzzer(14);
 // State management
 enum TimerState {
   IDLE,
@@ -27,6 +27,7 @@ TimerState currentState = IDLE;
 unsigned long timmerStart = 0;
 unsigned long pausedTime = 0;
 unsigned long remainingTime = WORK_TIME;
+bool breakStarted = false;
 bool buttonPressed = false;
 bool resetButtonPressed = false;
 int animationFrame = 0;
@@ -79,6 +80,94 @@ void loop() {
       handleCompletedState();
       break;
   }
+}
+
+void playBuzzer() {
+  buzzer.begin(10);
+
+  buzzer.sound(NOTE_A3, 500); 
+  buzzer.sound(NOTE_A3, 500);
+  buzzer.sound(NOTE_A3, 500);
+  buzzer.sound(NOTE_F3, 375);
+  buzzer.sound(NOTE_C4, 125);
+
+  buzzer.sound(NOTE_A3, 500);
+  buzzer.sound(NOTE_F3, 375);
+  buzzer.sound(NOTE_C4, 125);
+  buzzer.sound(NOTE_A3, 1000);
+
+  buzzer.sound(NOTE_E4, 500); 
+  buzzer.sound(NOTE_E4, 500);
+  buzzer.sound(NOTE_E4, 500);
+  buzzer.sound(NOTE_F4, 375);
+  buzzer.sound(NOTE_C4, 125);
+
+  buzzer.sound(NOTE_GS3, 500);
+  buzzer.sound(NOTE_F3, 375);
+  buzzer.sound(NOTE_C4, 125);
+  buzzer.sound(NOTE_A3, 1000);
+
+  buzzer.sound(NOTE_A4, 500);
+  buzzer.sound(NOTE_A3, 375);
+  buzzer.sound(NOTE_A3, 125);
+  buzzer.sound(NOTE_A4, 500);
+  buzzer.sound(NOTE_GS4, 375);
+  buzzer.sound(NOTE_G4, 125);
+
+  buzzer.sound(NOTE_FS4, 125);
+  buzzer.sound(NOTE_E4, 125);
+  buzzer.sound(NOTE_F4, 250);
+  buzzer.sound(0, 250);
+  buzzer.sound(NOTE_AS3, 250);
+  buzzer.sound(NOTE_DS4, 500);
+  buzzer.sound(NOTE_D4, 375);
+  buzzer.sound(NOTE_CS4, 125);
+
+  buzzer.sound(NOTE_C4, 125);
+  buzzer.sound(NOTE_B3, 125);
+  buzzer.sound(NOTE_C4, 250);
+  buzzer.sound(0, 250);
+  buzzer.sound(NOTE_F3, 250);
+  buzzer.sound(NOTE_GS3, 500);
+  buzzer.sound(NOTE_F3, 375);
+  buzzer.sound(NOTE_A3, 125);
+
+  buzzer.sound(NOTE_C4, 500);
+  buzzer.sound(NOTE_A3, 375);
+  buzzer.sound(NOTE_C4, 125);
+  buzzer.sound(NOTE_E4, 1000);
+
+  buzzer.sound(NOTE_A4, 500);
+  buzzer.sound(NOTE_A3, 375);
+  buzzer.sound(NOTE_A3, 125);
+  buzzer.sound(NOTE_A4, 500);
+  buzzer.sound(NOTE_GS4, 375);
+  buzzer.sound(NOTE_G4, 125);
+
+  buzzer.sound(NOTE_FS4, 125);
+  buzzer.sound(NOTE_E4, 125);
+  buzzer.sound(NOTE_F4, 250);
+  buzzer.sound(0, 250);
+  buzzer.sound(NOTE_AS3, 250);
+  buzzer.sound(NOTE_DS4, 500);
+  buzzer.sound(NOTE_D4, 375);
+  buzzer.sound(NOTE_CS4, 125);
+
+  buzzer.sound(NOTE_C4, 125);
+  buzzer.sound(NOTE_B3, 125);
+  buzzer.sound(NOTE_C4, 250);
+  buzzer.sound(0, 250);
+  buzzer.sound(NOTE_F3, 250);
+  buzzer.sound(NOTE_GS3, 500);
+  buzzer.sound(NOTE_F3, 375);
+  buzzer.sound(NOTE_C4, 125);
+
+  buzzer.sound(NOTE_A3, 500);
+  buzzer.sound(NOTE_F3, 375);
+  buzzer.sound(NOTE_C4, 125);
+  buzzer.sound(NOTE_A3, 1000);
+
+  buzzer.end(2000);
 }
 
 void readButtons() {
@@ -154,6 +243,7 @@ void handleWorkingState() {
   if (elapsedSeconds >= WORK_TIME) {
     // Work session is complete
     currentState = BREAK;
+    breakStarted = true;
     timmerStart = millis();
     remainingTime = BREAK_TIME;
     
@@ -170,6 +260,10 @@ void handlePausedState() {
 }
 
 void handleBreakState() {
+  if (breakStarted) {
+    playBuzzer();
+    breakStarted = false;
+  }
   // Calculate remaining break time
   unsigned long elapsedSeconds = (millis() - timmerStart) / 1000;
   if (elapsedSeconds >= BREAK_TIME) {
